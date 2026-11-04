@@ -15,6 +15,14 @@ export interface AdminUser {
  * Call this at the top of any admin Server Component or layout.
  */
 export async function requireAdmin(): Promise<AdminUser> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // If Supabase is not configured yet or has placeholders:
+  if (!url || !anonKey || url.includes("your-project")) {
+    redirect("/admin/login?error=not_configured");
+  }
+
   const supabase = await createClient();
 
   const {
@@ -35,7 +43,7 @@ export async function requireAdmin(): Promise<AdminUser> {
   if (!profile || profile.role !== "admin") {
     // Not an admin — sign them out and redirect
     await supabase.auth.signOut();
-    redirect("/admin/login");
+    redirect("/admin/login?error=unauthorized");
   }
 
   return {
@@ -51,6 +59,13 @@ export async function requireAdmin(): Promise<AdminUser> {
  * Does NOT redirect. Useful for conditional rendering.
  */
 export async function getAdminUser(): Promise<AdminUser | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey || url.includes("your-project")) {
+    return null;
+  }
+
   const supabase = await createClient();
 
   const {

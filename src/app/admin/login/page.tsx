@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { loginAction, type AuthState } from "@/app/actions/auth";
-import { ShieldCheck, Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
+import { ShieldCheck, Eye, EyeOff, Lock, Mail, AlertCircle, ArrowLeft } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
@@ -21,32 +22,45 @@ function LoginFormInner() {
   const errorMessage =
     state?.error ||
     (urlError === "unauthorized"
-      ? "Access denied. You do not have administrator privileges."
+      ? "Access denied. Your account does not have administrator privileges."
+      : urlError === "not_configured"
+      ? "Supabase is not configured yet. Add your live NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local to sign in."
       : null);
 
   return (
-    <div className="w-full max-w-md mx-auto px-6">
+    <div className="w-full max-w-md mx-auto px-6 py-10">
+      {/* Return to website */}
+      <div className="mb-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to NarinderKumar.com</span>
+        </Link>
+      </div>
+
       {/* Logo & Branding */}
       <div className="text-center mb-10">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white text-black mb-6">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white text-black mb-5 shadow-2xl">
           <ShieldCheck className="w-8 h-8" />
         </div>
 
         <h1 className="text-3xl font-black font-heading tracking-tight text-white">
           NK<span className="text-neutral-500">.</span> Admin
         </h1>
-        <p className="text-sm text-neutral-500 mt-2 font-medium">
-          Secure access to the NarinderKumar.com operations console.
+        <p className="text-xs text-neutral-400 mt-2 font-medium">
+          Protected Administrator Operations Console
         </p>
       </div>
 
       {/* Error Alert */}
       {errorMessage && (
-        <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-xl flex items-start gap-3">
+        <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-xl flex items-start gap-3 animate-in fade-in duration-200">
           <AlertCircle className="w-5 h-5 text-white shrink-0 mt-0.5" />
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-white mb-0.5">
-              Authentication Failed
+              Notice
             </p>
             <p className="text-xs text-neutral-400 leading-relaxed">
               {errorMessage}
@@ -69,7 +83,7 @@ function LoginFormInner() {
             Administrator Email
           </label>
           <div className="relative">
-            <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-neutral-600" />
+            <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" />
             <input
               id="email"
               name="email"
@@ -92,7 +106,7 @@ function LoginFormInner() {
             Password
           </label>
           <div className="relative">
-            <Lock className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-neutral-600" />
+            <Lock className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500" />
             <input
               id="password"
               name="password"
@@ -122,7 +136,7 @@ function LoginFormInner() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full py-3.5 bg-white text-black font-black text-xs uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-2 flex items-center justify-center gap-2"
+          className="w-full py-3.5 bg-white text-black font-black text-xs uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mt-2 flex items-center justify-center gap-2 shadow-lg"
         >
           {isPending ? (
             <>
@@ -146,7 +160,7 @@ function LoginFormInner() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <span>Authenticating...</span>
+              <span>Verifying Credentials...</span>
             </>
           ) : (
             <span>Sign In to Console</span>
@@ -154,10 +168,10 @@ function LoginFormInner() {
         </button>
       </form>
 
-      {/* Footer */}
-      <div className="mt-10 text-center">
-        <p className="text-[10px] text-neutral-700 uppercase tracking-widest font-semibold">
-          Protected Platform • Supabase Auth • Server-Side Verified
+      {/* Footer Security Badges */}
+      <div className="mt-12 text-center border-t border-neutral-900 pt-6">
+        <p className="text-[10px] text-neutral-600 uppercase tracking-widest font-semibold">
+          Protected Platform • Supabase Auth • Role-Based RLS Verified
         </p>
       </div>
     </div>
