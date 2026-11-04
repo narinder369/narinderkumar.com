@@ -1,39 +1,54 @@
 -- ==============================================================================
 -- NARINDERKUMAR.COM — Admin Authentication Setup
--- Migration 003: Admin User Seed Instructions
+-- Migration 003: Admin User Seed & Profile Initialization
 -- ==============================================================================
---
--- This migration contains the SQL to create your admin profile row.
--- The actual auth.users record must be created FIRST via the Supabase Dashboard.
---
--- ╔══════════════════════════════════════════════════════════════════════════════╗
--- ║  STEP-BY-STEP ADMIN ACCOUNT SETUP                                         ║
--- ╠══════════════════════════════════════════════════════════════════════════════╣
--- ║                                                                            ║
--- ║  1. Go to Supabase Dashboard → Authentication → Users                     ║
--- ║  2. Click "Add user" → "Create new user"                                  ║
--- ║  3. Enter your admin email and a strong password                           ║
--- ║  4. Check "Auto Confirm User" so the account is immediately active        ║
--- ║  5. Click "Create User"                                                    ║
--- ║  6. Copy the UUID of the newly created user                               ║
--- ║  7. Replace 'YOUR_SUPABASE_USER_UUID_HERE' below with that UUID           ║
--- ║  8. Replace 'your-admin@email.com' with your actual admin email           ║
--- ║  9. Run this SQL in the Supabase SQL Editor                               ║
--- ║                                                                            ║
--- ╚══════════════════════════════════════════════════════════════════════════════╝
 
--- Insert admin profile (replace the UUID and email with your actual values)
+-- 1. Ensure the profiles table exists (in case Migration 001 was not run yet)
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    full_name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    avatar_url TEXT,
+    role TEXT NOT NULL DEFAULT 'customer' CHECK (role IN ('customer', 'admin', 'editor')),
+    phone TEXT,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- 2. Enable Row Level Security
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+-- 3. Ensure self-access policy exists on profiles
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE schemaname = 'public' 
+      AND tablename = 'profiles' 
+      AND policyname = 'Users can view and update their own profile'
+  ) THEN
+    CREATE POLICY "Users can view and update their own profile"
+      ON public.profiles FOR ALL
+      USING (auth.uid() = id);
+  END IF;
+END $$;
+
+-- 4. INSERT OR UPDATE YOUR ADMIN PROFILE
+-- Replace 'YOUR_SUPABASE_USER_UUID_HERE' with the UUID from Authentication → Users
+-- Replace 'your-admin@email.com' with the exact email used to sign up
 INSERT INTO public.profiles (id, full_name, email, role)
 VALUES (
-  'YOUR_SUPABASE_USER_UUID_HERE',   -- ← Replace with actual auth.users UUID
+  'YOUR_SUPABASE_USER_UUID_HERE',   -- ← Paste actual auth.users UUID here
   'Narinder Kumar',                  -- ← Your display name
-  'your-admin@email.com',           -- ← Must match the auth.users email
-  'admin'                            -- ← This grants admin dashboard access
+  'your-admin@email.com',           -- ← Must match the user's email in Supabase
+  'admin'                            -- ← Role granting admin access
 )
 ON CONFLICT (id) DO UPDATE
 SET role = 'admin',
     full_name = EXCLUDED.full_name,
+    email = EXCLUDED.email,
     updated_at = timezone('utc'::text, now());
 
--- Verify: Run this query to confirm the admin profile exists
+-- 5. Verification Query: Confirm the admin profile was created
 -- SELECT id, full_name, email, role FROM public.profiles WHERE role = 'admin';
