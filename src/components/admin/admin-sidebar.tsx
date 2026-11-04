@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logoutAction } from "@/app/actions/auth";
 import {
   LayoutDashboard,
   Package,
@@ -15,6 +16,8 @@ import {
   Menu,
   X,
   ShieldCheck,
+  LogOut,
+  User,
 } from "lucide-react";
 
 const navItems = [
@@ -27,9 +30,23 @@ const navItems = [
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  adminName?: string;
+  adminEmail?: string;
+}
+
+export function AdminSidebar({
+  adminName = "Administrator",
+  adminEmail = "",
+}: AdminSidebarProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await logoutAction();
+  };
 
   return (
     <>
@@ -49,7 +66,11 @@ export function AdminSidebar() {
           className="p-2 text-neutral-300 hover:text-white"
           aria-label="Toggle Navigation"
         >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {mobileOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Menu className="w-6 h-6" />
+          )}
         </button>
       </header>
 
@@ -70,7 +91,11 @@ export function AdminSidebar() {
         <div>
           {/* Brand Header */}
           <div className="p-6 border-b border-neutral-800 flex items-center justify-between">
-            <Link href="/admin" className="flex items-center gap-2" onClick={() => setMobileOpen(false)}>
+            <Link
+              href="/admin"
+              className="flex items-center gap-2"
+              onClick={() => setMobileOpen(false)}
+            >
               <span className="font-heading font-black text-2xl text-white tracking-tight">
                 NK<span className="text-white">.</span>
               </span>
@@ -112,13 +137,30 @@ export function AdminSidebar() {
           </nav>
         </div>
 
-        {/* Bottom Actions */}
-        <div className="p-6 border-t border-neutral-800 space-y-4">
-          <div className="flex items-center gap-2 text-[11px] text-neutral-400 font-semibold tracking-wide">
-            <ShieldCheck className="w-4 h-4 text-white" />
-            <span>Authenticated Operator</span>
+        {/* Bottom: Admin Identity & Actions */}
+        <div className="p-5 border-t border-neutral-800 space-y-4">
+          {/* Authenticated Admin Identity */}
+          <div className="flex items-start gap-3 p-3 bg-neutral-900/60 rounded-xl border border-neutral-800">
+            <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center font-black text-xs shrink-0">
+              {adminName.charAt(0).toUpperCase()}
+            </div>
+            <div className="overflow-hidden flex-1">
+              <div className="text-xs font-bold text-white truncate">
+                {adminName}
+              </div>
+              <div className="text-[10px] text-neutral-500 font-mono truncate">
+                {adminEmail}
+              </div>
+              <div className="flex items-center gap-1 mt-1">
+                <ShieldCheck className="w-3 h-3 text-white" />
+                <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400">
+                  Verified Admin
+                </span>
+              </div>
+            </div>
           </div>
 
+          {/* View Live Site */}
           <Link
             href="/"
             className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-neutral-800 bg-neutral-900/60 text-xs font-bold text-neutral-300 hover:text-white hover:border-neutral-700 transition-colors"
@@ -128,8 +170,20 @@ export function AdminSidebar() {
               <ExternalLink className="w-3.5 h-3.5" />
               Live Site
             </span>
-            <span className="text-[10px] uppercase font-mono text-neutral-500">↗</span>
+            <span className="text-[10px] uppercase font-mono text-neutral-500">
+              ↗
+            </span>
           </Link>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-neutral-800 bg-neutral-900/40 text-xs font-bold uppercase tracking-wider text-neutral-400 hover:text-white hover:border-white/20 hover:bg-white/5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>{loggingOut ? "Signing Out..." : "Sign Out"}</span>
+          </button>
         </div>
       </aside>
     </>
