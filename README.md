@@ -18,6 +18,7 @@ NarinderKumar.com combines five business verticals under a unified, high-contras
 - **Database & Storage**: Supabase (PostgreSQL + Row-Level Security)
 - **Payments**: Dual integration (Razorpay for INR/UPI & Stripe for Global)
 - **State Management**: Zustand with persistent storage
+- **Hosting & CI/CD**: Vercel
 
 ## Getting Started
 ```bash
